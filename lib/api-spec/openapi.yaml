@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: case-files
+    description: Case file workspace operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,150 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /case-files:
+    get:
+      operationId: listCaseFiles
+      tags: [case-files]
+      summary: List case files
+      responses:
+        "200":
+          description: Case files
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CaseFile"
+    post:
+      operationId: createCaseFile
+      tags: [case-files]
+      summary: Create a case file
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaseFileInput"
+      responses:
+        "201":
+          description: Created case file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseFile"
+  /case-files/summary:
+    get:
+      operationId: getCaseFilesSummary
+      tags: [case-files]
+      summary: Get workspace summary
+      responses:
+        "200":
+          description: Case file workspace summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseFilesSummary"
+  /case-files/{id}:
+    get:
+      operationId: getCaseFile
+      tags: [case-files]
+      summary: Get one case file
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Case file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseFile"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateCaseFile
+      tags: [case-files]
+      summary: Update a case file
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaseFileUpdate"
+      responses:
+        "200":
+          description: Updated case file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseFile"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteCaseFile
+      tags: [case-files]
+      summary: Delete a case file
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+  /case-files/{id}/messages:
+    get:
+      operationId: listCaseFileMessages
+      tags: [case-files]
+      summary: List assistant messages for a case file
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CaseFileMessage"
+    post:
+      operationId: sendCaseFileMessage
+      tags: [case-files]
+      summary: Send a message to the case-file assistant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaseFileMessageInput"
+      responses:
+        "200":
+          description: Streaming assistant response
+          content:
+            text/event-stream: {}
 components:
   schemas:
     HealthStatus:
@@ -33,4 +179,181 @@ components:
           type: string
       required:
         - status
+    CaseFile:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        clientName:
+          type: ["string", "null"]
+        matterType:
+          type: string
+        jurisdiction:
+          type: string
+        status:
+          type: string
+          enum: [active, review, completed]
+        progress:
+          type: integer
+        summary:
+          type: ["string", "null"]
+        issues:
+          type: array
+          items:
+            type: string
+        keyFacts:
+          type: array
+          items:
+            type: string
+        nextSteps:
+          type: array
+          items:
+            type: string
+        nextDeadline:
+          type: ["string", "null"]
+          format: date
+        messagesCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - clientName
+        - matterType
+        - jurisdiction
+        - status
+        - progress
+        - summary
+        - issues
+        - keyFacts
+        - nextSteps
+        - nextDeadline
+        - messagesCount
+        - createdAt
+        - updatedAt
+    CaseFileInput:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        matterType:
+          type: string
+          minLength: 1
+        clientName:
+          type: ["string", "null"]
+        jurisdiction:
+          type: string
+      required:
+        - title
+        - matterType
+        - jurisdiction
+    CaseFileUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        clientName:
+          type: ["string", "null"]
+        matterType:
+          type: string
+        jurisdiction:
+          type: string
+        status:
+          type: string
+          enum: [active, review, completed]
+        progress:
+          type: integer
+        summary:
+          type: ["string", "null"]
+        issues:
+          type: array
+          items:
+            type: string
+        keyFacts:
+          type: array
+          items:
+            type: string
+        nextSteps:
+          type: array
+          items:
+            type: string
+        nextDeadline:
+          type: ["string", "null"]
+          format: date
+    CaseFileMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        caseFileId:
+          type: integer
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - caseFileId
+        - role
+        - content
+        - createdAt
+    CaseFileMessageInput:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 1
+      required:
+        - content
+    CaseFilesSummary:
+      type: object
+      properties:
+        total:
+          type: integer
+        active:
+          type: integer
+        review:
+          type: integer
+        completed:
+          type: integer
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/CaseFileActivity"
+      required:
+        - total
+        - active
+        - review
+        - completed
+        - recentActivity
+    CaseFileActivity:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        activity:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - activity
+        - updatedAt
 

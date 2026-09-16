@@ -1,0 +1,1 @@
+- [Optional AI provider setup](ai-provider-setup.md) — preserve product utility and show an explicit setup state when live AI access is unavailable.
