@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "CaseCraft AI"
+description = "An AI-powered case-file workspace for law students to turn case notes into organized legal matter summaries, timelines, issues, and next steps."
+version = "1.0.0"
+id = "artifacts/casecraft-ai"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23190
+
+[services.development]
+run = "pnpm --filter @workspace/casecraft-ai run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/casecraft-ai", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/casecraft-ai/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23190"
+BASE_PATH = "/"
